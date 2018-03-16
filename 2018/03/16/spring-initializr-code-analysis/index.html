@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="spring boot,spring initializr,代码生成器," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="简介spring initializr 通过web ui/web service api的方式，可以快速生成spring boot项目。github地址：https://github.com/spring-io/initializr/ 使用起来非常简单，在页面上配置项目属性，如项目类型、语言、spring boot版本、依赖项等，然后点击generate project，即可生成一个单module">
+<meta name="keywords" content="spring boot,spring initializr,代码生成器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring initializr 源码分析">
+<meta property="og:url" content="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/index.html">
+<meta property="og:site_name" content="归晚blog">
+<meta property="og:description" content="简介spring initializr 通过web ui/web service api的方式，可以快速生成spring boot项目。github地址：https://github.com/spring-io/initializr/ 使用起来非常简单，在页面上配置项目属性，如项目类型、语言、spring boot版本、依赖项等，然后点击generate project，即可生成一个单module">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/1.png">
+<meta property="og:image" content="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/2.png">
+<meta property="og:image" content="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/3.png">
+<meta property="og:updated_time" content="2018-03-16T03:44:12.044Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring initializr 源码分析">
+<meta name="twitter:description" content="简介spring initializr 通过web ui/web service api的方式，可以快速生成spring boot项目。github地址：https://github.com/spring-io/initializr/ 使用起来非常简单，在页面上配置项目属性，如项目类型、语言、spring boot版本、依赖项等，然后点击generate project，即可生成一个单module">
+<meta name="twitter:image" content="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/"/>
+
+
+
+
+
+  <title>spring initializr 源码分析 | 归晚blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">归晚blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Hello World</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://guiwanok.github.io/2018/03/16/spring-initializr-code-analysis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="归晚">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://pic1.zhimg.com/v2-25ba87c92c9c8b2e0275e65b62900c2d_xll.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="归晚blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring initializr 源码分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-16T10:24:08+08:00">
+                2018-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/spring/" itemprop="url" rel="index">
+                    <span itemprop="name">spring</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>spring initializr 通过web ui/web service api的方式，可以快速生成spring boot项目。github地址：<a href="https://github.com/spring-io/initializr/" target="_blank" rel="noopener">https://github.com/spring-io/initializr/</a></p>
+<p>使用起来非常简单，在页面上配置项目属性，如项目类型、语言、spring boot版本、依赖项等，然后点击generate project，即可生成一个单module的spring boot项目。最终生成的是一个zip包，提供给用户下载。</p>
+<p>在实际应用中，可以考虑以spring initializr为原型，对源码进行改造，开发属于团队内部的代码生成器。</p>
+<img src="/2018/03/16/spring-initializr-code-analysis/1.png" title="spring initializr主页面">
+<h3 id="启动过程"><a href="#启动过程" class="headerlink" title="启动过程"></a>启动过程</h3><p>这里简单对spring initializr源码进行分析。</p>
+<p>spring initializr本身也是spring boot项目，启动类是  io.spring.initializr.service.InitializrService 。（强烈推荐clone代码到本地，直接启动InitializrService即可，没有其他依赖服务）</p>
+<p>META-INF/spring.factories 配置如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.boot.autoconfigure.EnableAutoConfiguration=\</span><br><span class="line">io.spring.initializr.web.autoconfigure.InitializrAutoConfiguration</span><br><span class="line"></span><br><span class="line">org.springframework.boot.env.EnvironmentPostProcessor=\</span><br><span class="line">io.spring.initializr.web.autoconfigure.CloudfoundryEnvironmentPostProcessor</span><br></pre></td></tr></table></figure></p>
+<p>在SpringApplication启动时会主动去加载配置类 InitializrAutoConfiguration，直接看源码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableConfigurationProperties</span>(InitializrProperties.class)</span><br><span class="line"><span class="meta">@AutoConfigureAfter</span>(&#123; CacheAutoConfiguration.class, JacksonAutoConfiguration.class,</span><br><span class="line">        WebClientAutoConfiguration.class &#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InitializrAutoConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span>(InitializrMetadataProvider.class)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> InitializrMetadataProvider <span class="title">initializrMetadataProvider</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            InitializrProperties properties, // 读取application.yml前缀为initializr的配置</span></span></span><br><span class="line"><span class="function"><span class="params">            ObjectMapper objectMapper,</span></span></span><br><span class="line"><span class="function"><span class="params">            RestTemplateBuilder restTemplateBuilder)</span> </span>&#123;</span><br><span class="line">        InitializrMetadata metadata = InitializrMetadataBuilder</span><br><span class="line">                .fromInitializrProperties(properties).build(); <span class="comment">// 根据配置生成 metadata</span></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> DefaultInitializrMetadataProvider(metadata,</span><br><span class="line">                objectMapper, restTemplateBuilder.build());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里的操作是读取application.yml前缀为initializr配置项，然后根据配置项生成默认的metadata。这个metadata是用于生成项目用的源数据，相当于一个配置集合。metadata主要定义了以下几个属性：</p>
+<ul>
+<li>env - 环境变量</li>
+<li>dependencies - 依赖项</li>
+<li>types - 项目类型：maven/gradle</li>
+<li>packagings - 打包方式：war/jar</li>
+<li>javaVersions - jdk版本</li>
+<li>languages - 使用的语言：java/kotlin/groovy</li>
+<li>bootVersions - spring boot版本<br>以上是启动过程中完成的工作。</li>
+</ul>
+<p>用户的访问操作对应的Controller类为 io.spring.initializr.web.project.MainController。</p>
+<p>访问主页面，即触发执行以下代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping</span>(value = <span class="string">"/"</span>, produces = <span class="string">"text/html"</span>)</span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">home</span><span class="params">(Map&lt;String, Object&gt; model)</span> </span>&#123;</span><br><span class="line">    renderHome(model);</span><br><span class="line">    <span class="keyword">return</span> <span class="string">"home"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出这段代码完成的主要逻辑是根据用户请求参数，生成model对象，再用model对象去渲染 home.html, 完成渲染后，再返回给客户端。这里主要看渲染的过程，及renderHome()方法的实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Render the home page with the specified template.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">renderHome</span><span class="params">(Map&lt;String, Object&gt; model)</span> </span>&#123;</span><br><span class="line">    InitializrMetadata metadata = metadataProvider.get(); <span class="comment">// 获取metadata</span></span><br><span class="line"></span><br><span class="line">    model.put(<span class="string">"serviceUrl"</span>, generateAppUrl());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从metadata中读取默认的配置型，并赋值给model对象</span></span><br><span class="line">    BeanWrapperImpl wrapper = <span class="keyword">new</span> BeanWrapperImpl(metadata);</span><br><span class="line">　　　　　　</span><br><span class="line">    <span class="keyword">for</span> (PropertyDescriptor descriptor : wrapper.getPropertyDescriptors()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="string">"types"</span>.equals(descriptor.getName())) &#123;</span><br><span class="line">            model.put(<span class="string">"types"</span>, removeTypes(metadata.getTypes()));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            model.put(descriptor.getName(),</span><br><span class="line">                    wrapper.getPropertyValue(descriptor.getName()));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Google analytics support</span></span><br><span class="line">    model.put(<span class="string">"trackingCode"</span>,</span><br><span class="line">            metadata.getConfiguration().getEnv().getGoogleAnalyticsTrackingCode());</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>renderHome() 方法的处理逻辑很简单，就是把metadata对象的字段读取出来转成map对象赋值给model。前端再根据model对象渲染页面，页面上项目类型、语言、spring boot版本、依赖项等可选内容以及项目属性的默认填充值都是根据model对象渲染出来的。可见application.yml涵盖了的是所有配置项的全集。</p>
+<h3 id="调用流程"><a href="#调用流程" class="headerlink" title="调用流程"></a>调用流程</h3><p>下面介绍点击generate project时，服务做了哪些操作。</p>
+<p>点击generate project发送的请求如下：</p>
+<p><a href="http://start.spring.io/starter.zip?type=gradle-project&amp;language=java&amp;bootVersion=1.5.10.RELEASE&amp;baseDir=demo&amp;groupId=com.example&amp;artifactId=demo&amp;name=demo&amp;description=Demo+project+for+Spring+Boot&amp;packageName=com.example.demo&amp;packaging=jar&amp;javaVersion=1.8&amp;autocomplete=&amp;generate-project=&amp;style=web" target="_blank" rel="noopener">http://start.spring.io/starter.zip?type=gradle-project&amp;language=java&amp;bootVersion=1.5.10.RELEASE&amp;baseDir=demo&amp;groupId=com.example&amp;artifactId=demo&amp;name=demo&amp;description=Demo+project+for+Spring+Boot&amp;packageName=com.example.demo&amp;packaging=jar&amp;javaVersion=1.8&amp;autocomplete=&amp;generate-project=&amp;style=web</a></p>
+<p>进行拆分后的参数列表，这些参数光看参数名就可以知道其含义：</p>
+<ul>
+<li>type=gradle-project</li>
+<li>language=java</li>
+<li>bootVersion=1.5.10.RELEASE</li>
+<li>baseDir=demo</li>
+<li>groupId=com.example</li>
+<li>artifactId=demo</li>
+<li>name=demo</li>
+<li>description=Demo+project+for+Spring+Boot</li>
+<li>packageName=com.example.demo</li>
+<li>packaging=jar</li>
+<li>javaVersion=1.8</li>
+<li>style=web</li>
+</ul>
+<p>访问的接口是starter.zip，位于 io.spring.initializr.web.project.MainController#springZip()<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping</span>(<span class="string">"/starter.zip"</span>)</span><br><span class="line"><span class="meta">@ResponseBody</span></span><br><span class="line"><span class="keyword">public</span> ResponseEntity&lt;<span class="keyword">byte</span>[]&gt; springZip(BasicProjectRequest basicRequest)</span><br><span class="line">        <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    ProjectRequest request = (ProjectRequest) basicRequest;</span><br><span class="line">    File dir = projectGenerator.generateProjectStructure(request); <span class="comment">// 生成代码的关键代码</span></span><br><span class="line"></span><br><span class="line">    File download = projectGenerator.createDistributionFile(dir, <span class="string">".zip"</span>);</span><br><span class="line"></span><br><span class="line">    String wrapperScript = getWrapperScript(request);</span><br><span class="line">    <span class="keyword">new</span> File(dir, wrapperScript).setExecutable(<span class="keyword">true</span>);</span><br><span class="line">    Zip zip = <span class="keyword">new</span> Zip();</span><br><span class="line">    zip.setProject(<span class="keyword">new</span> Project());</span><br><span class="line">    zip.setDefaultexcludes(<span class="keyword">false</span>);</span><br><span class="line">    ZipFileSet set = <span class="keyword">new</span> ZipFileSet();</span><br><span class="line">    set.setDir(dir);</span><br><span class="line">    set.setFileMode(<span class="string">"755"</span>);</span><br><span class="line">    set.setIncludes(wrapperScript);</span><br><span class="line">    set.setDefaultexcludes(<span class="keyword">false</span>);</span><br><span class="line">    zip.addFileset(set);</span><br><span class="line">    set = <span class="keyword">new</span> ZipFileSet();</span><br><span class="line">    set.setDir(dir);</span><br><span class="line">    set.setIncludes(<span class="string">"**,"</span>);</span><br><span class="line">    set.setExcludes(wrapperScript);</span><br><span class="line">    set.setDefaultexcludes(<span class="keyword">false</span>);</span><br><span class="line">    zip.addFileset(set);</span><br><span class="line">    zip.setDestFile(download.getCanonicalFile());</span><br><span class="line">    zip.execute();</span><br><span class="line">    <span class="keyword">return</span> upload(download, dir, generateFileName(request, <span class="string">"zip"</span>), <span class="string">"application/zip"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>springZip主要执行的是打包的过程，主要看<br>projectGenerator.generateProjectStructure(request)，这一步是生成代码的关键步骤。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Generate a project structure for the specified &#123;<span class="doctag">@link</span> ProjectRequest&#125;. Returns a directory containing the</span></span><br><span class="line"><span class="comment"> * project.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> File <span class="title">generateProjectStructure</span><span class="params">(ProjectRequest request)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">　　　　　　　<span class="comment">// 根据请求生成model，这里的model非全集model</span></span><br><span class="line">        Map&lt;String, Object&gt; model = resolveModel(request);</span><br><span class="line">　　　　　　　<span class="comment">// 生成代码</span></span><br><span class="line">        File rootDir = generateProjectStructure(request, model);</span><br><span class="line">        publishProjectGeneratedEvent(request);</span><br><span class="line">        <span class="keyword">return</span> rootDir;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InitializrException ex) &#123;</span><br><span class="line">        publishProjectFailedEvent(request, ex);</span><br><span class="line">        <span class="keyword">throw</span> ex;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>resolveModel方法的代码非常长，这里就不贴了。处理逻辑不复杂，简单地说就是根据用户请求request，以及项目启动时生成的metadata，生成出一个model。这里的metadata相当于一个配置的全集，用户请求request指明了项目的个性化配置，根据个性化配置，从配置全集中进行筛选和组装出model。这个model对象会用于下一步生成代码使用。</p>
+<p>这里可以看一下model包含了哪些内容，下面的截图是我在本地debug时生成的。</p>
+<img src="/2018/03/16/spring-initializr-code-analysis/2.png" title="model对象">
+<p>好了。下面看下是如何根据model生成代码的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Generate a project structure for the specified &#123;<span class="doctag">@link</span> ProjectRequest&#125; and resolved</span></span><br><span class="line"><span class="comment"> * model.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> File <span class="title">generateProjectStructure</span><span class="params">(ProjectRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">        Map&lt;String, Object&gt; model)</span> </span>&#123;</span><br><span class="line">    File rootDir;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        rootDir = File.createTempFile(<span class="string">"tmp"</span>, <span class="string">""</span>, getTemporaryDirectory());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Cannot create temp dir"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">    addTempFile(rootDir.getName(), rootDir);</span><br><span class="line">    rootDir.delete();</span><br><span class="line">    rootDir.mkdirs();</span><br><span class="line"></span><br><span class="line">    File dir = initializerProjectDir(rootDir, request);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isGradleBuild(request)) &#123;</span><br><span class="line">        String gradle = <span class="keyword">new</span> String(doGenerateGradleBuild(model));</span><br><span class="line">        writeText(<span class="keyword">new</span> File(dir, <span class="string">"build.gradle"</span>), gradle);</span><br><span class="line">        writeGradleWrapper(dir, Version.safeParse(request.getBootVersion()));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        String pom = <span class="keyword">new</span> String(doGenerateMavenPom(model));</span><br><span class="line">        writeText(<span class="keyword">new</span> File(dir, <span class="string">"pom.xml"</span>), pom);</span><br><span class="line">        writeMavenWrapper(dir);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    generateGitIgnore(dir, request);</span><br><span class="line"></span><br><span class="line">    String applicationName = request.getApplicationName();</span><br><span class="line">    String language = request.getLanguage();</span><br><span class="line"></span><br><span class="line">    String codeLocation = language;</span><br><span class="line">    File src = <span class="keyword">new</span> File(<span class="keyword">new</span> File(dir, <span class="string">"src/main/"</span> + codeLocation),</span><br><span class="line">            request.getPackageName().replace(<span class="string">"."</span>, <span class="string">"/"</span>));</span><br><span class="line">    src.mkdirs();</span><br><span class="line">    String extension = (<span class="string">"kotlin"</span>.equals(language) ? <span class="string">"kt"</span> : language);</span><br><span class="line">    write(<span class="keyword">new</span> File(src, applicationName + <span class="string">"."</span> + extension),</span><br><span class="line">            <span class="string">"Application."</span> + extension, model);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">"war"</span>.equals(request.getPackaging())) &#123;</span><br><span class="line">        String fileName = <span class="string">"ServletInitializer."</span> + extension;</span><br><span class="line">        write(<span class="keyword">new</span> File(src, fileName), fileName, model);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    File test = <span class="keyword">new</span> File(<span class="keyword">new</span> File(dir, <span class="string">"src/test/"</span> + codeLocation),</span><br><span class="line">            request.getPackageName().replace(<span class="string">"."</span>, <span class="string">"/"</span>));</span><br><span class="line">    test.mkdirs();</span><br><span class="line">    setupTestModel(request, model);</span><br><span class="line">    write(<span class="keyword">new</span> File(test, applicationName + <span class="string">"Tests."</span> + extension),</span><br><span class="line">            <span class="string">"ApplicationTests."</span> + extension, model);</span><br><span class="line"></span><br><span class="line">    File resources = <span class="keyword">new</span> File(dir, <span class="string">"src/main/resources"</span>);</span><br><span class="line">    resources.mkdirs();</span><br><span class="line">    writeText(<span class="keyword">new</span> File(resources, <span class="string">"application.properties"</span>), <span class="string">""</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (request.hasWebFacet()) &#123;</span><br><span class="line">        <span class="keyword">new</span> File(dir, <span class="string">"src/main/resources/templates"</span>).mkdirs();</span><br><span class="line">        <span class="keyword">new</span> File(dir, <span class="string">"src/main/resources/static"</span>).mkdirs();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> rootDir;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码虽长，但理解起来也不复杂，根据项目的属性model对象，生成对应的文件夹和文件。比如src/main/java、src/main/resources、application.properties等。文件夹生成直接调用File.mkdirs()方法即可。那么文件是如何生成的呢？</p>
+<p>首先对于一些默认的配置文件，比如maven/gradle  wrapper等，直接拷贝即可。对于一些需要定制的文件，那么就通过模板渲染的方式去生成。这里的涉及的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">　　<span class="comment">// 写入文件, target表示目标文件，templateName表示模板名称，model表示通过解析获得的项目配置</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(File target, String templateName, Map&lt;String, Object&gt; model)</span> </span>&#123;</span><br><span class="line">    String body = templateRenderer.process(templateName, model);</span><br><span class="line">    writeText(target, body);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 根据model渲染模板，生成文件内容</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">process</span><span class="params">(String name, Map&lt;String, ?&gt; model)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        Template template = getTemplate(name);</span><br><span class="line">        <span class="keyword">return</span> template.execute(model);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        log.error(<span class="string">"Cannot render: "</span> + name, e);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Cannot render template"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定位模板</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Template <span class="title">getTemplate</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (cache) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.templateCaches.computeIfAbsent(name, <span class="keyword">this</span>::loadTemplate);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> loadTemplate(name);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里举一个例子。模板Application.java，位于<br>/initializr/initializr-generator/src/main/resources/templates/Application.java<br>内容如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> &#123;&#123;packageName&#125;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.SpringApplication;</span><br><span class="line">&#123;&#123;applicationImports&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#123;&#123;applicationAnnotations&#125;&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> </span>&#123;&#123;applicationName&#125;&#125; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(&#123;&#123;applicationName&#125;&#125;.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的  为占位符，通过model中的属性进行替换，获得最终的Application.java。</p>
+<p>这里的模板使用了mustcache框架，跟freemarker有点类似。</p>
+<p>目前initializr提供了以下模板</p>
+<img src="/2018/03/16/spring-initializr-code-analysis/3.png" title="spring initializr支持的模板">
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>至此，代码生成的逻辑已经差不多讲完了。简单的说，就是根据用户request，结合预设的配置全集metadata生成对应的model，再根据model渲染模板，生成指定的文件和文件夹，再打包返回给用户。</p>
+<p>如果要定制代码生成器，可以参考这种做法，主要是改造metadata和模板，可以增加或者修改metadata和模板来满足定制化的需求。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spring-boot/" rel="tag"># spring boot</a>
+          
+            <a href="/tags/spring-initializr/" rel="tag"># spring initializr</a>
+          
+            <a href="/tags/代码生成器/" rel="tag"># 代码生成器</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://pic1.zhimg.com/v2-25ba87c92c9c8b2e0275e65b62900c2d_xll.jpg"
+                alt="归晚" />
+            
+              <p class="site-author-name" itemprop="name">归晚</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启动过程"><span class="nav-number">2.</span> <span class="nav-text">启动过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调用流程"><span class="nav-number">3.</span> <span class="nav-text">调用流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">归晚</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
